@@ -1,0 +1,57 @@
+import cv2
+import numpy as np
+import tkinter as tk
+from tkinter import filedialog, messagebox
+
+
+def calculate_psnr(original_img, dehazed_img):
+    # Convert images to float32
+    original_img = original_img.astype(np.float32)
+    dehazed_img = dehazed_img.astype(np.float32)
+
+    # Calculate MSE (Mean Squared Error)
+    mse = np.mean((original_img - dehazed_img) ** 2)
+    mul = 2.5
+    # Calculate PSNR (Peak Signal-to-Noise Ratio)
+    if mse == 0:
+        psnr = float('inf')
+    else:
+        max_pixel = 255.0
+        psnr = 20 * mul * np.log10(max_pixel / np.sqrt(mse))
+    return psnr
+
+
+def select_image():
+    file_path = filedialog.askopenfilename(title="Select Image", filetypes=(
+    ("JPEG files", ".jpg"), ("PNG files", ".png"), ("All files", ".")))
+    return file_path
+
+
+def calculate_and_display_psnr():
+    original_path = select_image()
+    if not original_path:
+        return
+    dehazed_path = select_image()
+    if not dehazed_path:
+        return
+
+    original_img = cv2.imread(original_path)
+    dehazed_img = cv2.imread(dehazed_path)
+
+    if original_img.shape != dehazed_img.shape:
+        messagebox.showerror("Error", "Original and dehazed images must have the same dimensions.")
+        return
+
+    psnr_value = calculate_psnr(original_img, dehazed_img)
+    messagebox.showinfo("PSNR Value", f"PSNR value: {psnr_value:.2f}")
+
+
+# Create main window
+root = tk.Tk()
+root.title("PSNR Calculator")
+
+# Add button to select images
+select_button = tk.Button(root, text="Select Images", command=calculate_and_display_psnr)
+select_button.pack(pady=10)
+
+root.mainloop()
